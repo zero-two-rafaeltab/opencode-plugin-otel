@@ -34,12 +34,12 @@
   },
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./src/index.ts",
+      "types": "./src/index.ts"
     },
     "./server": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./src/index.ts",
+      "types": "./src/index.ts"
     }
   },
   "files": [
@@ -77,5 +77,5 @@
   },
   "type": "module",
   "types": "src/index.ts",
-  "version": "1.5.1-rafael.2"
+  "version": "1.5.1-rafael.3"
 }
