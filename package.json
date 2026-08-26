@@ -55,8 +55,8 @@
     "observability"
   ],
   "license": "MPL-2.0",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
   "name": "@devtheops/opencode-plugin-otel",
   "oc-plugin": [
     "server"
@@ -73,10 +73,9 @@
     "check:jsdoc-coverage": "bun scripts/check-jsdoc-coverage.mjs",
     "lint": "bun --bun eslint .",
     "prepack": "bun run build",
-    "prepare": "bun run build",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
-  "types": "dist/index.d.ts",
-  "version": "1.5.1-rafael.1"
+  "types": "src/index.ts",
+  "version": "1.5.1-rafael.2"
 }
