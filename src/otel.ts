@@ -1,5 +1,6 @@
 import { logs } from "@opentelemetry/api-logs"
 import { metrics, trace } from "@opentelemetry/api"
+import { hostname } from "node:os"
 import { LoggerProvider, BatchLogRecordProcessor } from "@opentelemetry/sdk-logs"
 import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
 import { BasicTracerProvider, BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
@@ -28,8 +29,8 @@ import {
 } from "./headers.ts"
 
 /**
- * Builds an OTel `Resource` seeded with `service.name`, `app.version`, `os.type`, and
- * `host.arch`. Additional attributes from `OTEL_RESOURCE_ATTRIBUTES` are merged in and
+ * Builds an OTel `Resource` seeded with `service.name`, `app.version`, `os.type`,
+ * `host.name`, and `host.arch`. Additional attributes from `OTEL_RESOURCE_ATTRIBUTES` are merged in and
  * may override the defaults.
  */
 export function buildResource(version: string) {
@@ -37,6 +38,7 @@ export function buildResource(version: string) {
     [ATTR_SERVICE_NAME]: "opencode",
     "app.version": version,
     "os.type": process.platform,
+    "host.name": hostname(),
     [ATTR_HOST_ARCH]: process.arch,
     ...parseAttributePairs(process.env["OTEL_RESOURCE_ATTRIBUTES"]),
   }

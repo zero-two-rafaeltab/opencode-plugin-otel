@@ -1,4 +1,5 @@
-import { describe, test, expect, afterEach } from "bun:test"
+import { describe, expect, test, afterEach } from "bun:test"
+import { hostname } from "node:os"
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-grpc"
 import { OTLPLogExporter as OTLPHttpLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
 import { OTLPLogExporter as OTLPProtoLogExporter } from "@opentelemetry/exporter-logs-otlp-proto"
@@ -47,13 +48,14 @@ describe("buildResource", () => {
     }
   })
 
-  test("includes service.name, app.version, os.type, host.arch", () => {
+  test("includes service.name, app.version, os.type, host.name, host.arch", () => {
     delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
     const resource = buildResource("1.2.3")
     const attrs = resource.attributes
     expect(attrs["service.name"]).toBe("opencode")
     expect(attrs["app.version"]).toBe("1.2.3")
     expect(attrs["os.type"]).toBe(process.platform)
+    expect(attrs["host.name"]).toBe(hostname())
     expect(attrs["host.arch"]).toBe(process.arch)
   })
 
