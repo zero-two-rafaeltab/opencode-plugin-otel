@@ -149,6 +149,7 @@ export type MockContext = {
     session: SpyCounter
     token: SpyCounter
     cost: SpyCounter
+    hypotheticalCost: SpyCounter
     lines: SpyCounter
     commit: SpyCounter
     cache: SpyCounter
@@ -181,6 +182,7 @@ export function makeCtx(
   const session = makeCounter()
   const token = makeCounter()
   const cost = makeCounter()
+  const hypotheticalCost = makeCounter()
   const lines = makeCounter()
   const commit = makeCounter()
   const cache = makeCounter()
@@ -201,6 +203,7 @@ export function makeCtx(
     sessionCounter: session as unknown as Counter,
     tokenCounter: token as unknown as Counter,
     costCounter: cost as unknown as Counter,
+    hypotheticalCostCounter: hypotheticalCost as unknown as Counter,
     linesCounter: lines as unknown as Counter,
     linesTotalGauge: linesTotalGauge as unknown as Gauge,
     commitCounter: commit as unknown as Counter,
@@ -248,7 +251,7 @@ export function makeCtx(
 
   return {
     ctx,
-    counters: { session, token, cost, lines, commit, cache, message, modelUsage, retry, subtask },
+    counters: { session, token, cost, hypotheticalCost, lines, commit, cache, message, modelUsage, retry, subtask },
     histograms: { tool: toolHistogram, sessionDuration: sessionDurationHistogram },
     gauges: { sessionToken: sessionTokenGauge, sessionCost: sessionCostGauge, linesTotal: linesTotalGauge },
     logger,

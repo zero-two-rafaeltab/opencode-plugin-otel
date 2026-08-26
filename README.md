@@ -38,6 +38,7 @@ An [opencode](https://opencode.ai) plugin that exports telemetry via OpenTelemet
 | `opencode.session.count` | Counter | Incremented on each `session.created` event |
 | `opencode.token.usage` | Counter | Per token type: `input`, `output`, `reasoning`, `cacheRead`, `cacheCreation` |
 | `opencode.cost.usage` | Counter | USD cost per completed assistant message |
+| `opencode.hypothetical_api_cost` | Counter | Personal counterfactual OpenAI Standard API cost for mapped GPT-5.6 subscription models |
 | `opencode.lines_of_code.count` | Counter | **Gross positive churn, not a net total.** Emits the positive delta of `additions`/`deletions` since the previous `session.diff` for the same session; negative deltas (when opencode's cumulative `additions` or `deletions` shrinks vs. the last event) are dropped. Summing the counter therefore reports gross lines added/removed across forward transitions — it does *not* reconcile back to the session's current state after any revert (full or partial). Intra-message rewrites that opencode collapses in its per-message cumulative are not visible here at all. Use `opencode.lines_of_code.total` for the authoritative live cumulative. |
 | `opencode.lines_of_code.total` | Gauge | **Authoritative live cumulative lines added/removed for the session.** Refreshed on every `session.diff` with opencode's current cumulative value. Drops back to `0` if opencode reports a revert to baseline, and tracks partial reverts faithfully. Query this (not the counter) to answer "what does this session currently amount to". |
 | `opencode.commit.count` | Counter | Git commits detected via bash tool |
@@ -58,7 +59,7 @@ An [opencode](https://opencode.ai) plugin that exports telemetry via OpenTelemet
 | `session.idle` | Session went idle (includes total tokens, cost, messages) |
 | `session.error` | Session error |
 | `user_prompt` | User sent a message (includes `prompt_length`, `model`, `agent`; also `prompt` when `OPENCODE_CAPTURE_PROMPT_IN_LOGS` is set) |
-| `api_request` | Completed assistant message (tokens, cost, duration) |
+| `api_request` | Completed assistant message (tokens, reported cost, hypothetical API cost and pricing provenance when mapped, duration) |
 | `api_error` | Failed assistant message (error summary, duration) |
 | `tool_result` | Tool completed or errored (duration, success, output size) |
 | `tool_decision` | Permission prompt answered (accept/reject) |

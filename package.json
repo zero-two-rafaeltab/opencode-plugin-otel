@@ -73,9 +73,10 @@
     "check:jsdoc-coverage": "bun scripts/check-jsdoc-coverage.mjs",
     "lint": "bun --bun eslint .",
     "prepack": "bun run build",
+    "prepare": "bun run build",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
   "types": "dist/index.d.ts",
-  "version": "1.5.1"
+  "version": "1.5.1-rafael.1"
 }

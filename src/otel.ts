@@ -160,6 +160,10 @@ export function createInstruments(prefix: string): Instruments {
       unit: "USD",
       description: "Cost of the opencode session in USD",
     }),
+    hypotheticalCostCounter: meter.createCounter(`${prefix}hypothetical_api_cost`, {
+      unit: "USD",
+      description: "Counterfactual OpenAI Standard API cost in USD",
+    }),
     linesCounter: meter.createCounter(`${prefix}lines_of_code.count`, {
       unit: "{line}",
       description: "Gross positive churn of lines added/removed across a session. Emits the positive delta vs. the previous session.diff; negative deltas (cumulative shrinkage) are dropped, so sums do not reconcile to net after any revert. Use lines_of_code.total for the authoritative live cumulative.",

@@ -39,6 +39,12 @@ import {
   resolveSessionTraceContext,
 } from "../util.ts"
 import type { HandlerContext } from "../types.ts"
+import {
+  estimateHypotheticalApiCost,
+  HYPOTHETICAL_PRICING_CURRENCY,
+  HYPOTHETICAL_PRICING_SCENARIO,
+  HYPOTHETICAL_PRICING_VERSION,
+} from "../pricing.ts"
 
 const OPENINFERENCE_SPAN_KIND = SemanticConventions.OPENINFERENCE_SPAN_KIND
 const LLM_FINISH_REASON = "llm.finish_reason"
@@ -69,6 +75,15 @@ export function handleMessageUpdated(e: EventMessageUpdated, ctx: HandlerContext
   const duration = assistant.time.completed - assistant.time.created
   const { agentName, agentType } = getSessionAgentMeta(sessionID, ctx)
   const agent = agentName
+  const hypothetical = assistant.error ? undefined : estimateHypotheticalApiCost({
+    providerID,
+    modelID,
+    input: assistant.tokens.input,
+    output: assistant.tokens.output,
+    reasoning: assistant.tokens.reasoning,
+    cacheRead: assistant.tokens.cache.read,
+    cacheWrite: assistant.tokens.cache.write,
+  })
 
   const totalTokens = assistant.tokens.input + assistant.tokens.output + assistant.tokens.reasoning
     + assistant.tokens.cache.read + assistant.tokens.cache.write
@@ -84,6 +99,24 @@ export function handleMessageUpdated(e: EventMessageUpdated, ctx: HandlerContext
 
   if (isMetricEnabled("cost.usage", ctx)) {
     ctx.instruments.costCounter.add(assistant.cost, { ...ctx.commonAttrs, "session.id": sessionID, model: modelID, agent })
+  }
+
+  if (hypothetical && isMetricEnabled("hypothetical_api_cost", ctx)) {
+    ctx.instruments.hypotheticalCostCounter.add(hypothetical.amountUsd, {
+      ...ctx.commonAttrs,
+      "session.id": sessionID,
+      provider: providerID,
+      model: modelID,
+      agent,
+      "pricing.priced_model": hypothetical.pricedModel,
+      "pricing.scenario": HYPOTHETICAL_PRICING_SCENARIO,
+      "pricing.currency": HYPOTHETICAL_PRICING_CURRENCY,
+      "pricing.version": HYPOTHETICAL_PRICING_VERSION,
+      "pricing.context_band": hypothetical.contextBand,
+      "pricing.mapping_method": hypothetical.mappingMethod,
+      "pricing.confidence": "high",
+      "pricing.estimation_status": "estimated",
+    })
   }
 
   if (isMetricEnabled("cache.count", ctx)) {
@@ -201,6 +234,16 @@ export function handleMessageUpdated(e: EventMessageUpdated, ctx: HandlerContext
         "gen_ai.provider.name": genAiProviderName(providerID),
         ...agentAttrs(agentName, agentType),
         cost_usd: assistant.cost,
+        ...(hypothetical ? {
+          hypothetical_api_cost_usd: hypothetical.amountUsd,
+          priced_model: hypothetical.pricedModel,
+          pricing_scenario: HYPOTHETICAL_PRICING_SCENARIO,
+          pricing_currency: HYPOTHETICAL_PRICING_CURRENCY,
+          pricing_version: HYPOTHETICAL_PRICING_VERSION,
+          pricing_context_band: hypothetical.contextBand,
+          pricing_mapping_method: hypothetical.mappingMethod,
+          pricing_resolution: "estimated",
+        } : { pricing_resolution: "unmapped" }),
         duration_ms: duration,
       input_tokens: assistant.tokens.input,
       output_tokens: assistant.tokens.output,

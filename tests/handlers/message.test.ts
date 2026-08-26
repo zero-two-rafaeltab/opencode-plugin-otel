@@ -150,6 +150,58 @@ describe("handleMessageUpdated", () => {
     expect(counters.cost.calls.at(0)!.value).toBe(0.05)
   })
 
+  test("emits frozen hypothetical API cost for a mapped subscription model", async () => {
+    const { ctx, counters, logger } = makeCtx()
+    await handleMessageUpdated(makeAssistantMessageUpdated({
+      providerID: "openai",
+      modelID: "gpt-5.6-terra-fast",
+      cost: 0,
+      tokens: {
+        input: 100_000,
+        output: 20_000,
+        reasoning: 5_000,
+        cache: { read: 50_000, write: 10_000 },
+      },
+    }), ctx)
+    expect(counters.hypotheticalCost.calls).toHaveLength(1)
+    expect(counters.hypotheticalCost.calls.at(0)).toEqual({
+      value: 0.535,
+      attrs: expect.objectContaining({
+        provider: "openai",
+        model: "gpt-5.6-terra-fast",
+        "pricing.priced_model": "gpt-5.6-terra",
+        "pricing.scenario": "openai-standard",
+        "pricing.version": "openai-standard-models-dev-2026-08-26-v1",
+        "pricing.context_band": "short",
+        "pricing.mapping_method": "explicit_subscription_alias",
+      }),
+    })
+    expect(logger.records.at(0)!.attributes).toEqual(expect.objectContaining({
+      hypothetical_api_cost_usd: 0.535,
+      pricing_version: "openai-standard-models-dev-2026-08-26-v1",
+      pricing_resolution: "estimated",
+    }))
+  })
+
+  test("does not emit hypothetical cost for failed or explicitly disabled estimates", async () => {
+    const failed = makeCtx()
+    await handleMessageUpdated(makeAssistantMessageUpdated({
+      providerID: "openai",
+      modelID: "gpt-5.6-terra-fast",
+      error: { name: "APIError" },
+    }), failed.ctx)
+    expect(failed.counters.hypotheticalCost.calls).toHaveLength(0)
+    expect(failed.logger.records.at(0)!.attributes?.["hypothetical_api_cost_usd"]).toBeUndefined()
+
+    const disabled = makeCtx("proj_test", ["hypothetical_api_cost"])
+    await handleMessageUpdated(makeAssistantMessageUpdated({
+      providerID: "openai",
+      modelID: "gpt-5.6-terra-fast",
+    }), disabled.ctx)
+    expect(disabled.counters.hypotheticalCost.calls).toHaveLength(0)
+    expect(disabled.logger.records.at(0)!.attributes?.["pricing_resolution"]).toBe("estimated")
+  })
+
   test("increments cache counter once per message with cache activity", async () => {
     const { ctx, counters } = makeCtx()
     await handleMessageUpdated(

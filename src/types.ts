@@ -40,6 +40,7 @@ export type Instruments = {
   sessionCounter: Counter
   tokenCounter: Counter
   costCounter: Counter
+  hypotheticalCostCounter: Counter
   linesCounter: Counter
   linesTotalGauge: Gauge
   commitCounter: Counter
