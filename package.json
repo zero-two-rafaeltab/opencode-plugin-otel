@@ -69,10 +69,9 @@
     "url": "https://github.com/DEVtheOPS/opencode-plugin-otel.git"
   },
   "scripts": {
-    "build": "bun build src/index.ts --outdir=./dist --target=node && tsc -p tsconfig.build.json",
+    "bundle": "bun build src/index.ts --outdir=./dist --target=node && tsc -p tsconfig.build.json",
     "check:jsdoc-coverage": "bun scripts/check-jsdoc-coverage.mjs",
     "lint": "bun --bun eslint .",
-    "prepack": "bun run build",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",
