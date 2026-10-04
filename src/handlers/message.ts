@@ -39,6 +39,39 @@ import {
   resolveSessionTraceContext,
 } from "../util.ts"
 import type { HandlerContext } from "../types.ts"
+
+const seenSkills = new WeakMap<HandlerContext, Set<string>>()
+
+function recordSkillLoad(part: ToolPart, ctx: HandlerContext) {
+  if (part.tool !== "skill" || part.state.status !== "completed") return
+  const name = part.state.input?.name
+  const end = part.state.time.end
+  if (typeof name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(name)) return
+  if (!part.sessionID || !part.callID || !Number.isFinite(end)) return
+  let keys = seenSkills.get(ctx)
+  if (!keys) {
+    keys = new Set()
+    seenSkills.set(ctx, keys)
+  }
+  const key = JSON.stringify([part.sessionID, part.callID])
+  if (keys.has(key)) return
+  keys.add(key)
+  if (keys.size > 4096) keys.delete(keys.values().next().value!)
+  ctx.emitLog({
+    severityNumber: SeverityNumber.INFO,
+    severityText: "INFO",
+    timestamp: end,
+    observedTimestamp: Date.now(),
+    body: "skill_load",
+    attributes: {
+      "event.name": "skill_load",
+      runtime: "opencode",
+      skill_name: name,
+      load_kind: "explicit",
+      status: "ok",
+    },
+  })
+}
 import {
   estimateHypotheticalApiCost,
   HYPOTHETICAL_PRICING_CURRENCY,
@@ -358,6 +391,7 @@ export function handleMessagePartUpdated(e: EventMessagePartUpdated, ctx: Handle
     }
 
     if (toolPart.state.status !== "completed" && toolPart.state.status !== "error") return
+    recordSkillLoad(toolPart, ctx)
 
     const pending = ctx.pendingToolSpans.get(key)
     ctx.pendingToolSpans.delete(key)
